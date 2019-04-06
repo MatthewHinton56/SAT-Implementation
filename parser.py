@@ -32,6 +32,7 @@ class opNode:
         self.op = op
         self.operands = list()
         self.mustTrue = False
+        self.mustFalse = False
     
     def __str__(self):
         return self.op 
@@ -41,6 +42,7 @@ class varNode:
     def __init__(self, name):
         self.name = name
         self.mustTrue = False
+        self.mustFalse = False
     
     def __str__(self):
         return self.name
@@ -60,25 +62,30 @@ def printBoolTree(root):
 
 def getParsedTree(input):
     l = getParser()
-    return l.parse(input)
+    tree = l.parse(input)
+    return tree
 
-def createVariableNode(node):
-    return varNode(str(node.children[0].value))
+def createVariableNode(node, varSet):
+    var = str(node.children[0].value)
+    if var not in varSet:
+        varSet[var] = len(varSet)
+    return varNode(var)
 
 
-def createBoolTree(root):
+def createBoolTree(root, varSet):
     if(root.data == 'variable'):
-        return createVariableNode(root)
+        return createVariableNode(root, varSet)
     node = opNode(root.data)
     for child in root.children:
-        node.operands.append(createBoolTree(child))
+        node.operands.append(createBoolTree(child, varSet))
     return node
 
 def generateTree(input):
-    return createBoolTree(getParsedTree(input))
+    varSet = {}
+    return (createBoolTree(getParsedTree(input), varSet), varSet)
 
-tree = getParser().parse("A || B")
-printBoolTree(createBoolTree(tree))
+tree , varSet = generateTree("A || B")
+#print (varSet)
 
 #print (tree.data)
 
@@ -86,7 +93,3 @@ printBoolTree(createBoolTree(tree))
 
 #for node in tree.children:
 #	print (node)
-print (tree)
-
-from lark.tree import pydot__tree_to_png    # Just a neat utility function
-pydot__tree_to_png(tree, "ex.png")
