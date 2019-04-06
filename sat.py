@@ -46,7 +46,12 @@ def booleanFunction(tree, var_array):
         return function(values)
     return h
 
+naive_count = 0
+mark_count = 0
+
 def naive_solution(input):
+    global naive_count
+    naive_count = 0
     tree , varSet = generateTree(input)
     f = booleanFunction(tree, varSet)
     solutions = [] 
@@ -54,6 +59,8 @@ def naive_solution(input):
     return solutions
 
 def naive_helper(f, curr_list, curr_index, solutions, max_length):
+    global naive_count
+    naive_count += 1
     if curr_index == max_length:
         if f(curr_list):
             solutions.append(curr_list)
@@ -61,11 +68,74 @@ def naive_helper(f, curr_list, curr_index, solutions, max_length):
         naive_helper(f, curr_list + [True], curr_index + 1, solutions, max_length)
         naive_helper(f, curr_list + [False], curr_index + 1, solutions, max_length)
 
-def markRequiredTrue:
+
+def mark_solution(input):
+    global mark_count
+    mark_count = 0
+    tree , varSet = generateTree(input)
+    printBoolTree (tree)
+    valid, required = markRequired(tree, varSet)
+    if not valid:
+        return []
+    f = booleanFunction(tree, varSet)
+    solutions = [] 
+    mark_helper(f, [], 0, solutions, len(varSet.keys()), required)
+    return solutions    
+
+
+
+def mark_helper(f, curr_list, curr_index, solutions, max_length, required):
+    global mark_count
+    mark_count += 1
+    if curr_index == max_length:
+        if f(curr_list):
+            solutions.append(curr_list)
+    else:
+        if curr_index in required:
+            mark_helper(f, curr_list + [required[curr_index]], curr_index + 1, solutions, max_length, required)
+        else:
+            mark_helper(f, curr_list + [True], curr_index + 1, solutions, max_length, required)
+            mark_helper(f, curr_list + [False], curr_index + 1, solutions, max_length, required)
+
+
+
+
+
+#Returns True if possible, can determine if an equation is impossible if variable X must be both True and False
+def markRequired(tree, varSet):
+    required = {}
+    valid = required_helper(tree, required, True, True, varSet)
+    return (valid, required)
+
+def required_helper(tree, required, current, and_chain, varSet):
+    if and_chain:
+        if current:
+            tree.mustTrue = True
+        else:
+            tree.mustFalse = False
+        if isinstance(tree, varNode):
+            if tree.name in required and current != required[varSet[tree.name]]:
+                return False
+            required[varSet[tree.name]] = current
+    newCurrent = current
+    new_and_chain = and_chain
+    if isinstance(tree, opNode):
+        if tree.op == 'not':
+            newCurrent = not newCurrent
+        if tree.op == 'xor' or tree.op == 'or':
+            new_and_chain = False
+        for child in tree.operands:
+            required_helper(child, required, newCurrent, new_and_chain, varSet)
+    return True
+
+
 
 
 tree , varSet = generateTree("(! A) || B")
 f = booleanFunction(tree, varSet)
 print (f([False, True]))
 
-print (naive_solution("(! A)  B"))
+print (naive_solution("!((A) && (B))"))
+print (mark_solution("!((A) && (B))"))
+print (naive_count)
+print (mark_count)

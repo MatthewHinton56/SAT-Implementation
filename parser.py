@@ -33,7 +33,6 @@ class opNode:
         self.operands = list()
         self.mustTrue = False
         self.mustFalse = False
-    
     def __str__(self):
         return self.op 
 
@@ -51,18 +50,20 @@ class varNode:
 
 def printBoolTree(root):
     q = Queue()
-    q.put(root)
+    q.put((None, root))
     while not q.empty():
-        f = q.get()
-        print (f)
+        p , f = q.get()
+        print (str(p) + str(f))
         if isinstance(f, opNode):
             for child in f.operands:
-                q.put(child)
+                q.put((f, child))
 
 
 def getParsedTree(input):
     l = getParser()
     tree = l.parse(input)
+    from lark.tree import pydot__tree_to_png    # Just a neat utility function
+    pydot__tree_to_png(tree, "ex.png")
     return tree
 
 def createVariableNode(node, varSet):
@@ -80,11 +81,31 @@ def createBoolTree(root, varSet):
         node.operands.append(createBoolTree(child, varSet))
     return node
 
+def collapseTree(root):
+    if isinstance(root, opNode):
+        for child in root.operands:
+            collapseTree(child)
+        canCollapse = True
+        for child in root.operands:
+            canCollapse =  canCollapse and (isinstance(child, varNode) or child.op == root.op)
+        if canCollapse:
+            newOperands = []
+            for child in root.operands:
+                if isinstance(child, varNode):
+                    newOperands.append(child)
+                else:
+                    newOperands += child.operands
+            root.operands = newOperands
+    return root
+
 def generateTree(input):
     varSet = {}
-    return (createBoolTree(getParsedTree(input), varSet), varSet)
+    return (collapseTree(createBoolTree(getParsedTree(input), varSet)), varSet)
 
-tree , varSet = generateTree("A || B")
+#tree , varSet = generateTree("(B && C) && D && (E && D)")
+#collapseTree(tree)
+#print (tree.operands)
+#printBoolTree(tree)
 #print (varSet)
 
 #print (tree.data)
