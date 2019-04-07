@@ -22,12 +22,24 @@ def xorFunc(l):
 def notFunc(v):
     return (not v[0])
 
+def nopFunc(v):
+    return (v[0])
+
+def eqFunc(l):
+    test = l[0]
+    out = True
+    for v in l:
+        out = out and (test == v)
+    return out 
+
 
 funcMap =	{
   "and": andFunc,
   "or": orFunc,
   "xor": xorFunc,
-  "not": notFunc
+  "not": notFunc,
+  "nop": nopFunc,
+  'eq': eqFunc
 }
 
 
@@ -73,7 +85,6 @@ def mark_solution(input):
     global mark_count
     mark_count = 0
     tree , varSet = generateTree(input)
-    printBoolTree (tree)
     valid, required = markRequired(tree, varSet)
     if not valid:
         return []
@@ -129,13 +140,7 @@ def required_helper(tree, required, current, and_chain, varSet):
     return True
 
 
-
-
-tree , varSet = generateTree("(! A) || B")
-f = booleanFunction(tree, varSet)
-print (f([False, True]))
-
-print (naive_solution("!((A) && (B))"))
-print (mark_solution("!((A) && (B))"))
+print (naive_solution(" ((! A) || (! B))"))
+print (mark_solution(" ((! A) || (! B))"))
 print (naive_count)
 print (mark_count)
